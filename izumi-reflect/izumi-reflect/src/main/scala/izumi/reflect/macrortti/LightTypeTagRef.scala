@@ -207,6 +207,10 @@ object LightTypeTagRef {
   sealed trait AbstractReference extends LightTypeTagRef
 
   final case class Lambda(input: List[LambdaParameter], output: AbstractReference) extends AbstractReference {
+    override def hashCode(): Int = {
+      normalizedOutput.hashCode()
+    }
+
     def referenced: Set[NameReference] = RuntimeAPI.unpack(this)
     def paramRefs: Set[NameReference] = input.map(n => NameReference(n.name)).toSet
     def allArgumentsReferenced: Boolean = paramRefs.diff(referenced).isEmpty
@@ -228,10 +232,6 @@ object LightTypeTagRef {
       }
     }
 
-    override def hashCode(): Int = {
-      normalizedOutput.hashCode()
-    }
-
     override def toString: String = this.render()
 
     private[this] def makeFakeParams: List[(String, NameReference)] = {
@@ -249,14 +249,17 @@ object LightTypeTagRef {
   sealed trait AppliedReference extends AbstractReference
 
   final case class IntersectionReference(refs: Set[AppliedReference]) extends AppliedReference {
+    override lazy val hashCode: Int = super.hashCode()
     override def toString: String = this.render()
   }
 
   final case class UnionReference(refs: Set[AppliedReference]) extends AppliedReference {
+    override lazy val hashCode: Int = super.hashCode()
     override def toString: String = this.render()
   }
 
   final case class Refinement(reference: AppliedReference, decls: Set[RefinementDecl]) extends AppliedReference {
+    override lazy val hashCode: Int = super.hashCode()
     override def toString: String = this.render()
   }
 
@@ -295,6 +298,8 @@ object LightTypeTagRef {
   }
 
   final case class NameReference(ref: SymName, boundaries: Boundaries = Boundaries.Empty, prefix: Option[AppliedReference] = None) extends AppliedNamedReference {
+    override lazy val hashCode: Int = super.hashCode()
+
     override def asName: NameReference = this
 
     override def toString: String = this.render()
@@ -304,6 +309,8 @@ object LightTypeTagRef {
   }
 
   final case class FullReference(ref: String, parameters: List[TypeParam], prefix: Option[AppliedReference] = None) extends AppliedNamedReference {
+    override lazy val hashCode: Int = super.hashCode()
+
     override def asName: NameReference = NameReference(SymTypeName(ref), prefix = prefix)
 
     override def toString: String = this.render()
